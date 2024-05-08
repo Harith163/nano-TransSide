@@ -1,0 +1,25 @@
+* nano-TransSide
+
+This is a quick test to show what the TransSide theme could look like if implemented in a nano-emacs style.
+
+To use, clone the directory to your location of choice and then test it out with the emacs -d command.
+
+#+begin_src shell
+  git clone https://github.com/Harith163/nano-TransSide.git
+  emacs --init-directory nano-TransSide/
+#+end_src
+
+Alternatively, if you'd rather
+
+#+begin_src shell
+  git clone https://github.com/Harith163/nano-TransSide.git
+  mv ~/.emacs.d ~/.emacs.d.bak
+  mv nano-TransSide/ ~/.emacs.d
+#+end_src
+
+You can then open emacs normally. Use this method if you're having issues with the above command opening the terminal version of emacs. Once you are done testing, you can
+
+#+begin_src shell
+  rm -rf ~/.emacs.d
+  mv ~/.emacs.d.bak ~/.emacs.d
+#+end_src

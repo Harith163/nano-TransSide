@@ -1,3 +1,14 @@
+* Custom-set variables
+When you customize a variable in emacs using the =M-x customize-variable= interface, it dumps all the customizations in the init.el file. This is not that big a deal, but to improve readability of these files, we can add a dedicated file for this.
+
+This behaviour is defined in =cus-edit.el=.
+
+#+begin_src emacs-lisp
+  (setq custom-file (concat user-emacs-directory "custom.el"))
+
+  (load-file custom-file)
+#+end_src
+
 * Package.el and Use-package setup
 The following lines of code initialize the file =package.el=, then add to a list - variable provided by =package.el= called =package-archives= which lets it know which archives (lists of repositories of packages) to use.
 
