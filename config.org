@@ -1,0 +1,310 @@
+* Package.el and Use-package setup
+The following lines of code initialize the file =package.el=, then add to a list - variable provided by =package.el= called =package-archives= which lets it know which archives (lists of repositories of packages) to use.
+
+By default, GNU ELPA (standing for Emacs Lisp Package Archive) and Non-GNU ELPA are the values in the list.
+
+Once that is done, we install a handy package called =vc-use-package= that works in conjunction with =use-package= (now built into emacs) to handle installing packages from other sources such as github, gitlab etc. The use-package macro is used extensively in this configuration to improve the readability to the user and to reduce unnecesary complexity.
+
+We lastly tell =use-package= to install a package if it is not available with the variable =use-package-always-ensure=.
+
+Use-package is defined in =use-package-core.el=.
+
+#+begin_src emacs-lisp
+  (require 'package)
+  (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+
+  (unless (package-installed-p 'vc-use-package)
+    (package-vc-install "https://github.com/slotThe/vc-use-package"))
+
+  (setq use-package-always-ensure t)
+#+end_src
+
+* Tweaks to emacs' appearance
+The complete look and feel of emacs is being dictated by nano emacs. It is objectively the best looking emacs distribution. I Just modify the colors set by =nano-base-colors.el= to match my own emacs theme, TransSide
+
+#+begin_src emacs-lisp
+  (defun skye/nano-dark-theme ()
+    "Modifying the nano theme with my own colors (dark)"
+    (setq nano-color-background "#00000F"
+          nano-color-critical "#FF0069"
+          nano-color-faded "#BE9DDF"
+          nano-color-foreground "#FFEEFF"
+          nano-color-highlight "#AEC6FF"
+          nano-color-popout "#FEA5D8"
+          nano-color-salient "#92DDFA"
+          nano-color-strong "#EFDFEF"
+          nano-color-subtle "#6E58BB"
+          nano-theme-var "dark")
+    (nano-refresh-theme)
+  )
+
+  (defun skye/nano-light-theme ()
+    "Modifying the nano theme with my own colors (light)"
+    (setq nano-color-background "#F1EBFF"
+          nano-color-critical "#FF0069"
+          nano-color-faded "#504099"
+          nano-color-foreground "#1F001F"
+          nano-color-highlight "#EFCFEF"
+          nano-color-popout "#800037"
+          nano-color-salient "#0068AD"
+          nano-color-strong "#000000"
+          nano-color-subtle "#816ECF"
+          nano-theme-var "light")
+    (nano-refresh-theme)
+  )
+
+  (defun skye/nano-catppuccin-mocha ()
+    "Modifying the nano theme with my own colors (dark)"
+    (setq nano-color-background "#1E1E2E"
+          nano-color-critical "#F38BA8"
+          nano-color-faded "#BAC2DE"
+          nano-color-foreground "#EDF6FF"
+          nano-color-highlight "#89DCFB"
+          nano-color-popout "#8F71E7"
+          nano-color-salient "#54CFFF"
+          nano-color-strong "#EDF6FF"
+          nano-color-subtle "#313244"
+          nano-theme-var "dark")
+    (nano-refresh-theme)
+    )
+
+  (use-package nano
+    :vc (:fetcher github :repo rougier/nano-emacs)
+    :config
+    (nano-theme-set-dark)
+    (skye/nano-dark-theme)
+    )
+
+  (set-face-attribute 'default nil :weight 'regular :height 200)
+#+end_src
+
+* Packages
+** Packages that make navigating emacs easier
+*** All the icons 
+All-the-icons provides fancy icons for all the lists and menus in emacs. This code uses the 6.0 beta which bundles the svgs instead of downloading the fonts.
+
+#+begin_src emacs-lisp
+  (use-package all-the-icons
+    :vc (all-the-icons :url "https://github.com/domtronn/all-the-icons.el.git" :branch "svg")
+    :if (display-graphic-p))
+
+  (use-package all-the-icons-completion)
+
+  (use-package all-the-icons-dired)
+#+end_src
+
+*** Better minibuffer
+A lot happens in the emacs minibuffer. Text search (default by =isearch, ido=), which inturn requires text completion (default by =icomplete=), the help selection for functions, variables etc, and a lot more.
+
+The following group of packages =vertico, marginalia, consult, orderless= are made by one Minad on github. They are very close to vanilla emacs but provide a richer experience with a focus on a small codebase.
+
+#+begin_src emacs-lisp
+  (use-package vertico
+    :bind
+    (:map vertico-map
+          ([remap keyboard-quit] . contrib/keyboard-quit-context+))
+    :custom
+    (vertico-count 8)
+    (vertico-resize t)
+    (vertico-cycle nil)
+    :init
+    (vertico-mode)
+    )
+
+  (use-package marginalia
+    :custom
+    (marginalia-max-relative-age 0)
+    (marginalia-align 'right)
+    :init
+    (marginalia-mode)
+    :hook
+    (marginalia-mode . all-the-icons-completion-marginalia-setup))
+
+  (all-the-icons-completion-mode)
+  
+  (use-package consult
+    :bind
+    (:map global-map
+          ("C-s" . consult-line)
+          ("C-x b" . consult-buffer)
+          ))
+
+  (use-package orderless
+    :custom
+    (completion-styles '(orderless))  
+    (completion-category-defaults nil)
+    (orderless-matching-styles
+     '(orderless-literal
+       orderless-prefixes
+       orderless-initialism
+       orderless-regexp
+       )))
+
+  (use-package savehist
+    :config (savehist-mode))
+#+end_src
+
+*** Corfu
+=Corfu= is another package by Minad for auto-complete suggestions.
+
+#+begin_src emacs-lisp
+  (use-package corfu
+    :config
+    (setq corfu-auto t)
+    (setq corfu-auto-delay 0)
+    (setq corfu-auto-prefix 0)
+    (setq corfu-quit-no-match t)
+    :init
+    (global-corfu-mode))
+#+end_src
+
+*** Electric pair mode
+Common things that come in pairs are forced to exist in pairs. Part of vanilla emacs. Small change made in org mode to ignore <> completion.
+
+#+begin_src emacs-lisp
+  (use-package elec-pair
+    :hook
+    (org-mode . (lambda ()
+                  (setq-local electric-pair-inhibit-predicate
+                              `(lambda (c)
+                                 (if (char-equal c ?<) t (,electric-pair-inhibit-predicate c))))))
+
+    (org-mode . (lambda ()
+                  (setq-local electric-pair-pairs (append electric-pair-pairs '((?$ . ?$))))))
+    :config
+    (electric-pair-mode 1))
+#+end_src
+
+*** Rainbow delimiters
+Delimiters is a fancy word/way of saying brackets, parenthesis, curly brackets etc. These let one disambiguate nested delimiters quickly and easily.
+
+#+begin_src emacs-lisp
+  (use-package rainbow-delimiters
+    :hook
+    (prog-mode . rainbow-delimiters-mode)
+    (Latex-mode . rainbow-delimiters-mode)
+    :config
+    (rainbow-delimiters-mode 1))
+#+end_src
+
+*** Which-Key
+Provides completion for keybinds in the minibuffer. Useful when learning emacs and as a replacement for the menu bar.
+
+#+begin_src emacs-lisp
+  (use-package which-key
+    :config (which-key-mode))
+#+end_src
+
+** Packages that make me want to use emacs
+These are the packages that drive my day to day use of emacs.
+*** Org mode stuff
+**** Org mode
+To explain org mode in a one liner would be a crime. The following are the obvious benefits
+
+1) Plain text files with mark-down like syntax
+2) Unparalleled list and heirarchy management
+3) Todo management and agenda view
+4) Numerous export options to other formats notable LaTeX, Beamer, and HTML
+5) Code tangling for literate programing (like this file!)
+
+More subtle benefits like the deep integration with multiple packages and emacs itself (like =org-capture=) will require some time to appreciate it. Suffice it to say, emacs and org-mode are intertwined not just in function but also in popularity.
+
+Note that you will probably want to set your own Agenda file locations, Org Directory, Todo states etc. For help with the syntax, I always read the help pages right in emacs which can be accessed with =C-h f= for functions and =C-h v= for variables. You can also place the cursor (called the point in emacs lingo) over a variable and invoke those keybinds to directly go to the help pages for those functions.
+
+#+begin_src emacs-lisp
+  (use-package org
+    :hook
+    (org-mode . org-cdlatex-mode)
+    (org-mode . org-indent-mode)
+
+    :init
+    (setq org-highlight-latex-and-related '(native latex script))
+    (setq org-export-backends '(latex odt org))
+
+    :bind
+    (:map org-mode-map
+          ("C-c C-x C-e" . skye/org-mark-and-archive)
+          ("C-c C-x <up>" . org-cycle-list-bullet)
+          ("M-<return>" . org-insert-item)
+          :map global-map
+          ("C-c a" . org-agenda)
+          ("C-c c" . org-capture))
+
+    :config
+    (require 'org-tempo)
+
+    (setq org-directory "~/Documents/Org")
+
+    (defun skye/org-get-path (stringname)
+      "Use concat to generate full path."
+      (concat (file-name-as-directory org-directory) stringname))
+
+    (setq skye/Readme (skye/org-get-path "Task List.org"))
+    (setq skye/archive (skye/org-get-path "archive.org"))
+
+    (setq org-agenda-files (list skye/Readme))
+    (setq org-archive-location (concat skye/archive "::* From %s"))
+
+    (setq org-ellipsis " ▼")
+    (setq org-src-fontify-natively t)
+    (setq org-src-tab-acts-natively t)
+
+    (setq org-todo-keywords '((sequence "TODO(t!)" "|" "DOING(i!)" "|" "WAITING(w!)") (sequence "|" "CANCELLED(c)" "|" "DONE(d)")))
+
+    (setq org-enforce-todo-dependencies t)
+    (setq org-enforce-todo-checkbox-dependencies t)
+
+    (setq skye/bullets-list '("◉" "●" "○" "⊙"))
+
+    (setq org-src-window-setup 'current-window)
+
+    (defun skye/org-mark-and-archive ()
+      "Mark the state of the current subtree as either DONE or CANCELLED and export to my archive.org file"
+      (interactive)
+      (org-todo (completing-read "Choose a final TODO state" '("DONE" "CANCELLED")))
+      (org-archive-subtree))
+
+
+    (setq org-pretty-entities nil)
+    (setq org-preview-latex-default-process 'dvisvgm)
+
+    (setq org-fontify-todo-headline nil)
+    (setq org-fontify-done-headline nil)
+
+    (setq org-tags-column 70)
+
+    (defun skye/return-user-details (a)
+    "Template function for giving tempo-user-elements the details it needs"
+    (cl-case (identity a)
+      (u user-full-name)
+      (e user-mail-address)))
+
+    (setq tempo-user-elements '(skye/return-user-details))
+
+    (tempo-define-template "default-org-header"
+                           '("#+latex_class: article"n"#+latex_class_options: [a4paper, 10pt]"n"#+latex_header: \\usepackage[margin=1in]{geometry} \\usepackage{setspace}"n"#+latex_header_extra: \\doublespace"n"#+latex_compiler: pdflatex"n"#+options: author:t broken-links:nil c:nil creator:nil"n"#+options: date:t e:nil email:t num:t"n"#+options: timestamp:nil title:t toc:nil todo:nil |:t"n"#+title:"p n"#+date: \\today"n"#+author: "u n"#+email: "e) "<P")
+
+    )
+#+end_src
+
+**** Org-modern
+=org-modern= is yet another Minad package that makes org-mode more palatable to the modern eye.
+
+#+begin_src emacs-lisp
+  (use-package org-modern
+    :config
+    (global-org-modern-mode))
+#+end_src
+
+* Lastly
+These are small tweaks to silence certain warnings that come up when using certain functions in certain modes. Emacs will warn the user that these are confusing to first time users and enable them only at will. This prevents those annoying pop-ups
+
+Also, maximum fontification of faces is prettier to me. Needs to be loaded at the end to bypass nano being dumb.
+
+#+begin_src emacs-lisp
+  (put 'scroll-left 'disabled nil)
+  (put 'dired-find-alternate-file 'disabled nil)
+  (put 'narrow-to-region 'disabled nil)
+
+  (setq font-lock-maximum-decoration t)
+#+end_src  
