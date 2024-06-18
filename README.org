@@ -5,14 +5,14 @@ This is a quick test to show what the TransSide theme could look like if impleme
 To use, clone the directory to your location of choice and then test it out with the emacs -d command.
 
 #+begin_src shell
-  git clone https://github.com/Harith163/nano-TransSide.git
+  git clone https://github.com/skye-repos/nano-TransSide.git
   emacs --init-directory nano-TransSide/
 #+end_src
 
 Alternatively, if you'd rather
 
 #+begin_src shell
-  git clone https://github.com/Harith163/nano-TransSide.git
+  git clone https://github.com/skye-repos/nano-TransSide.git
   mv ~/.emacs.d ~/.emacs.d.bak
   mv nano-TransSide/ ~/.emacs.d
 #+end_src
